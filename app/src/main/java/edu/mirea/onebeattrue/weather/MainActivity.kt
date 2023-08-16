@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
     private fun loadCity(callback: (String) -> Unit) {
         thread {
             Thread.sleep(5000)
-            Handler(Looper.getMainLooper()).post { // создание Handler с передачей в конструктор Main Looper - Looper главного потока
+            runOnUiThread { // удивительно, но что написано, то этот метод и делает (на самом деле под капотом Handler)
                 callback.invoke("Moscow")
             }
         }
@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadTemperature(city: String, callback: (Int) -> Unit) {
         thread {
-            Handler(Looper.getMainLooper()).post {
+            runOnUiThread {
                 Toast.makeText(
                     this, getString(R.string.loading_temperature_toast, city), Toast.LENGTH_SHORT
                 ).show()
@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
 
             Thread.sleep(5000)
 
-            Handler(Looper.getMainLooper()).post { callback.invoke(17) }
+            runOnUiThread { callback.invoke(17) }
         }
     }
 }
