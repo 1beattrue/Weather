@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Message
 import android.widget.Toast
 import androidx.core.view.isVisible
 import edu.mirea.onebeattrue.weather.databinding.ActivityMainBinding
@@ -15,6 +16,13 @@ class MainActivity : AppCompatActivity() {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
+    private val handler = object : Handler() {
+        override fun handleMessage(msg: Message) {
+            super.handleMessage(msg)
+            println("HANDLE_MSG: $msg")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -22,6 +30,8 @@ class MainActivity : AppCompatActivity() {
         binding.buttonLoad.setOnClickListener {
             loadData()
         }
+
+        handler.sendMessage(Message.obtain(handler, 0, 17))
     }
 
     private fun loadData() {
