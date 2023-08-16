@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.util.Log
 import android.widget.Toast
 import androidx.core.view.isVisible
 import edu.mirea.onebeattrue.weather.databinding.ActivityMainBinding
@@ -16,13 +17,6 @@ class MainActivity : AppCompatActivity() {
         ActivityMainBinding.inflate(layoutInflater)
     }
 
-    private val handler = object : Handler() {
-        override fun handleMessage(msg: Message) {
-            super.handleMessage(msg)
-            println("HANDLE_MSG: $msg")
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -30,11 +24,10 @@ class MainActivity : AppCompatActivity() {
         binding.buttonLoad.setOnClickListener {
             loadData()
         }
-
-        handler.sendMessage(Message.obtain(handler, 0, 17))
     }
 
     private fun loadData() {
+        Log.d("MainActivity", "Load started $this") // переверни телефон и наслаждайся
         binding.progress.isVisible = true
         binding.buttonLoad.isEnabled = false
         loadCity { city: String ->
@@ -43,6 +36,11 @@ class MainActivity : AppCompatActivity() {
                 binding.tvTemperature.text = temperature.toString()
                 binding.progress.isVisible = false
                 binding.buttonLoad.isEnabled = true
+                Log.d("MainActivity", "Load finished $this")
+                // загрузка завершается в activity, которая была создана изначально
+                // происходит утечка памяти,
+                // потому что сборщик мусора не может уничтожить ни одну из activity, которую держат наши потоки
+                // у потоков нет жизненного цикла -> они умрут только тогда, когда закончат свою работу
             }
         }
     }
