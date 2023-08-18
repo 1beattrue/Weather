@@ -8,7 +8,10 @@ import android.os.Message
 import android.util.Log
 import android.widget.Toast
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import edu.mirea.onebeattrue.weather.databinding.ActivityMainBinding
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 
 class MainActivity : AppCompatActivity() {
@@ -22,49 +25,36 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.buttonLoad.setOnClickListener {
-            loadData()
+            lifecycleScope.launch {// теперь жизненный цикл запроса совпадает с жизненным циклом Activity
+                loadData()
+            }
         }
     }
 
-    private fun loadData() {
-        Log.d("MainActivity", "Load started $this") // переверни телефон и наслаждайся
+    private suspend fun loadData() {
         binding.progress.isVisible = true
         binding.buttonLoad.isEnabled = false
-        loadCity { city: String ->
-            binding.tvLocation.text = city
-            loadTemperature(city) { temperature: Int ->
-                binding.tvTemperature.text = temperature.toString()
-                binding.progress.isVisible = false
-                binding.buttonLoad.isEnabled = true
-                Log.d("MainActivity", "Load finished $this")
-                // загрузка завершается в activity, которая была создана изначально
-                // происходит утечка памяти,
-                // потому что сборщик мусора не может уничтожить ни одну из activity, которую держат наши потоки
-                // у потоков нет жизненного цикла -> они умрут только тогда, когда закончат свою работу
-            }
-        }
+        val city = loadCity()
+        binding.tvLocation.text = city
+        val temperature = loadTemperature(city)
+        binding.tvTemperature.text = temperature.toString()
+        binding.progress.isVisible = false
+        binding.buttonLoad.isEnabled = true
     }
 
-    private fun loadCity(callback: (String) -> Unit) {
-        thread {
-            Thread.sleep(5000)
-            runOnUiThread { // удивительно, но что написано, то этот метод и делает (на самом деле под капотом Handler)
-                callback.invoke("Moscow")
-            }
-        }
+
+    private suspend fun loadCity(): String {
+        delay(5000)
+        return "Moscow"
+
     }
 
-    private fun loadTemperature(city: String, callback: (Int) -> Unit) {
-        thread {
-            runOnUiThread {
-                Toast.makeText(
-                    this, getString(R.string.loading_temperature_toast, city), Toast.LENGTH_SHORT
-                ).show()
-            }
+    private suspend fun loadTemperature(city: String): Int {
+        Toast.makeText(
+            this, getString(R.string.loading_temperature_toast, city), Toast.LENGTH_SHORT
+        ).show()
 
-            Thread.sleep(5000)
-
-            runOnUiThread { callback.invoke(17) }
-        }
+        delay(5000)
+        return 17
     }
 }
