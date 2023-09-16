@@ -10,6 +10,8 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import edu.mirea.onebeattrue.weather.databinding.ActivityMainBinding
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
@@ -29,19 +31,28 @@ class MainActivity : AppCompatActivity() {
             binding.progress.isVisible = true
             binding.buttonLoad.isEnabled = false
 
-            val jobCity = lifecycleScope.launch {
-                val city = loadCity()
-                binding.tvLocation.text = city
-            }
+            val deferredCity: Deferred<String> = lifecycleScope.async {
+                // тип Deferred<String> указал чисто для наглядности
+                    val city = loadCity()
+                    binding.tvLocation.text = city
+                    city
+                }
 
-            val jobTemperature = lifecycleScope.launch {
+            val deferredTemperature: Deferred<Int> = lifecycleScope.async {
                 val temperature = loadTemperature()
                 binding.tvTemperature.text = temperature.toString()
+                temperature
             }
 
             lifecycleScope.launch {
-                jobCity.join()
-                jobTemperature.join()
+                val city = deferredCity.await() // делает то же самое что и join, но возвращает результат нужного типа
+                val temperature = deferredTemperature.await()
+
+                Toast.makeText(
+                    this@MainActivity,
+                    "City: $city, temperature: $temperature",
+                    Toast.LENGTH_SHORT
+                ).show()
 
                 binding.progress.isVisible = false
                 binding.buttonLoad.isEnabled = true
