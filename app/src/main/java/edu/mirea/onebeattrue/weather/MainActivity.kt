@@ -31,22 +31,20 @@ class MainActivity : AppCompatActivity() {
             binding.progress.isVisible = true
             binding.buttonLoad.isEnabled = false
 
-            val deferredCity: Deferred<String> = lifecycleScope.async {
-                // тип Deferred<String> указал чисто для наглядности
-                    val city = loadCity()
-                    binding.tvLocation.text = city
-                    city
+            val deferredCity = lifecycleScope.async {
+                    loadCity() // возвращает название города -> deferredCity: String = название города
                 }
 
-            val deferredTemperature: Deferred<Int> = lifecycleScope.async {
-                val temperature = loadTemperature()
-                binding.tvTemperature.text = temperature.toString()
-                temperature
+            val deferredTemperature = lifecycleScope.async {
+                loadTemperature()
             }
 
             lifecycleScope.launch {
                 val city = deferredCity.await() // делает то же самое что и join, но возвращает результат нужного типа
                 val temperature = deferredTemperature.await()
+
+                binding.tvLocation.text = city
+                binding.tvTemperature.text = temperature.toString()
 
                 Toast.makeText(
                     this@MainActivity,
